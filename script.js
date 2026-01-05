@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const seatOptions = [
     { id: 'regular-hard', label: '普速 无座 / 硬座', trainType: 'regular', seatType: 'hard', requiresHardSeat: false },
-    { id: 'regular-sleeper', label: '普速 卧铺', trainType: 'regular', seatType: 'sleeper', requiresHardSeat: true },
+    { id: 'regular-sleeper', label: '普速 硬卧', trainType: 'regular', seatType: 'sleeper', requiresHardSeat: true },
     { id: 'hs-second', label: '动车 二等座', trainType: 'high-speed', seatType: 'second', requiresHardSeat: false },
     { id: 'hs-first', label: '动车 一等座', trainType: 'high-speed', seatType: 'first', requiresHardSeat: false },
     { id: 'hs-multi', label: '动车 多功能座', trainType: 'high-speed', seatType: 'multi', requiresHardSeat: false },
@@ -64,9 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
           <select class="field-seat">${buildSelectOptions()}</select>
         </div>
         <div>
-          <p class="label">成人票价（元）</p>
-          <input type="number" min="0" step="0.01" class="field-price" placeholder="如 120" />
-          <p class="helper">填写所选坐席的公布成人价</p>
+          <p class="label">票价（元）</p>
+          <input type="number" min="0" step="0.01" class="field-price" placeholder="普速填公布价 / 动车填执行价" />
+          <p class="helper">普速填公布成人价；动车填当日执行价（折后价）。</p>
+        </div>
+        <div class="hs-extra hidden">
+          <p class="label">动车公布价折扣（可选，默认1）</p>
+          <input type="number" min="0.01" max="1" step="0.01" class="field-discount" placeholder="如0.8表示8折" />
+          <p class="helper">不填默认公布价=执行价。执行价 = 公布价 × 折扣；学生票 = max(执行价×0.75, 公布价×0.4)。</p>
         </div>
         <div class="hard-seat-extra hidden">
           <p class="label">同程硬座成人价（元）</p>
@@ -80,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hardSeatWrapper = leg.querySelector('.hard-seat-extra');
     const detailToggle = leg.querySelector('.field-detail-toggle');
     const detailFields = leg.querySelector('.detail-fields');
+    const hsExtra = leg.querySelector('.hs-extra');
 
     seatSelect.addEventListener('change', () => {
       const current = seatMap.get(seatSelect.value);
@@ -87,6 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
         hardSeatWrapper.classList.remove('hidden');
       } else {
         hardSeatWrapper.classList.add('hidden');
+      }
+
+      if (current && current.trainType === 'high-speed') {
+        hsExtra.classList.remove('hidden');
+      } else {
+        hsExtra.classList.add('hidden');
       }
     });
 
@@ -168,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const trainInput = leg.querySelector('.field-train');
       const detailToggle = leg.querySelector('.field-detail-toggle');
       const hardSeatInput = leg.querySelector('.field-hard-seat');
+      const discountInput = leg.querySelector('.field-discount');
 
       const adultPrice = Number(priceInput.value);
       const origin = originInput.value.trim();
@@ -215,10 +228,18 @@ document.addEventListener('DOMContentLoaded', () => {
         studentPrice = adultPrice - hardSeatPrice * 0.5;
         detail = `普速卧铺：${formatCurrency(adultPrice)} - ${formatCurrency(hardSeatPrice)} × 0.5 = ${formatCurrency(studentPrice)}`;
       } else if (seat.trainType === 'high-speed') {
-        const seventyFive = adultPrice * 0.75;
-        const forty = adultPrice * 0.4;
-        studentPrice = Math.max(seventyFive, forty);
-        detail = `动车：75% = ${formatCurrency(seventyFive)}，最低 4 折 = ${formatCurrency(forty)}，取较高值 ${formatCurrency(studentPrice)}`;
+        const discount = discountInput?.value ? Number(discountInput.value) : 1;
+        if (!Number.isFinite(discount) || discount <= 0 || discount > 1) {
+          discountInput.classList.add('error');
+          breakdownEl.classList.add('empty');
+          breakdownEl.textContent = `第 ${i + 1} 程：动车折扣须在 0-1 之间（如 0.75）。`;
+          return;
+        }
+        const publishedPrice = adultPrice / discount;
+        const seventyFive = adultPrice * 0.75; // 执行价 × 75%
+        const fortyPublished = publishedPrice * 0.4; // 公布价 × 40%
+        studentPrice = Math.max(seventyFive, fortyPublished);
+        detail = `动车：执行价75% = ${formatCurrency(seventyFive)}，公布价4折 = ${formatCurrency(fortyPublished)}，取较高值 ${formatCurrency(studentPrice)}`;
       }
 
       totalOriginal += adultPrice;
@@ -228,10 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const routeLabel = needDetail ? `${origin || '起点'} → ${destination || '终点'}` : '快捷计算';
       const trainLabel = needDetail && trainNo ? ` · 车次 ${trainNo}` : '';
+      const discountLabel = seat.trainType === 'high-speed' && discountInput?.value ? ` · 折扣 ${discountInput.value}` : '';
 
       breakdownItems.push(`
         <div class="breakdown-item">
-          <p class="breakdown-item__title">第 ${i + 1} 程：${routeLabel}${trainLabel}</p>
+          <p class="breakdown-item__title">第 ${i + 1} 程：${routeLabel}${trainLabel}${discountLabel}</p>
           <p class="breakdown-item__meta">座位：${seat.label} · 成人价 ${formatCurrency(adultPrice)} · 学生价 ${formatCurrency(studentPrice)}</p>
           <p class="breakdown-item__meta">${detail}</p>
           <span class="${badgeClass}">${seat.trainType === 'regular' ? '普速' : '动车'}</span>
@@ -239,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `);
 
       breakdownTextParts.push(
-        `第${i + 1}程 ${routeLabel}${trainLabel ? ` ${trainLabel.replace(' · ', ' ')}` : ''}\n` +
+        `第${i + 1}程 ${routeLabel}${trainLabel ? ` ${trainLabel.replace(' · ', ' ')}` : ''}${discountLabel ? ` ${discountLabel.replace(' · ', ' ')}` : ''}\n` +
           `座位：${seat.label} 成人价 ${adultPrice.toFixed(2)} 学生价 ${studentPrice.toFixed(2)}\n` +
           `${detail}\n`
       );

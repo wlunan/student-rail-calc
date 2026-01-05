@@ -53,6 +53,7 @@
             <button class="ghost" id="copy-result-btn">复制结果</button>
           </div>
         </div>
+        <p class="muted" style="margin-top:-4px;margin-bottom:12px;">提醒：12306 小数点进位/舍入可能与本计算器不同，实际购票以 12306 为准。</p>
         <div class="totals" id="totals">
           <div>
             <p class="label">原始票价总计</p>
@@ -74,7 +75,7 @@
 
     <footer class="footer">
       <p>
-        规则：普速硬座/无座 5 折；普速卧铺 = 卧铺成人价 - 硬座成人价 × 0.5；动车座位 75% 但不低于 4 折。
+        规则：普速硬座/无座 5 折；普速硬卧 = 卧铺成人价 - 硬座成人价 × 0.5；动车学生价 = max(执行价 × 75%， 公布价 × 40%)，其中执行价 = 公布价 × 当日折扣。
         <span class="footer__links">
           <a href="https://link3.cc/lunan" target="_blank" rel="noreferrer">作者信息</a>
           ·
