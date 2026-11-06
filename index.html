@@ -1,90 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>学生火车票优惠计算器</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="icon" href="./icon.png" type="image/x-icon">
-</head>
-<body>
-  <div class="page">
-    <header class="hero">
-      <div class="hero__text">
-        <p class="eyebrow">学生票 · 多程 · 实时计算</p>
-        <h1>学生火车票优惠计算器</h1>
-        <p class="subtitle">支持普速与动车，快速算出原价、优惠价与节省金额，适配桌面与移动端。</p>
-      </div>
-      <div class="hero__cta">
-        <button class="primary" id="quick-add">+ 快速添加一程</button>
-        <button class="ghost" id="quick-reset">重置全部</button>
-      </div>
-    </header>
-
-    <main class="layout">
-      <section class="card" id="form-card">
-        <div class="card__header">
-          <div>
-            <p class="eyebrow">输入</p>
-            <h2>行程填写</h2>
-            <p class="muted">默认一程，可随时添加或删除。</p>
-          </div>
-          <div class="actions actions--inline">
-            <button class="ghost" id="reset-btn">重置</button>
-            <button class="primary" id="add-leg-btn">+ 添加一程</button>
-          </div>
-        </div>
-        <div id="legs-container" class="stack"></div>
-        <div class="actions">
-          <button class="primary wide" id="calculate-btn">计算优惠</button>
-        </div>
-      </section>
-
-      <section class="card" id="result-card">
-        <div class="card__header">
-          <div>
-            <p class="eyebrow">结果</p>
-            <h2>计算结果</h2>
-          </div>
-          <div class="actions">
-            <button class="ghost" id="copy-result-btn">复制结果</button>
-          </div>
-        </div>
-        <p class="muted" style="margin-top:-4px;margin-bottom:12px;">提醒：12306 小数点进位/舍入可能与本计算器不同，实际购票以 12306 为准。</p>
-        <div class="totals" id="totals">
-          <div>
-            <p class="label">原始票价总计</p>
-            <p class="value" id="total-original">￥0.00</p>
-          </div>
-          <div>
-            <p class="label">学生优惠后总计</p>
-            <p class="value highlight" id="total-student">￥0.00</p>
-          </div>
-          <div>
-            <p class="label">合计节省</p>
-            <p class="value saving" id="total-saved">￥0.00</p>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <div id="breakdown" class="breakdown empty">请先填写行程并点击“计算优惠”。</div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <p>
-        规则：普速硬座/无座 5 折；普速硬卧 = 卧铺成人价 - 硬座成人价 × 0.5；动车学生价 = max(执行价 × 75%， 公布价 × 40%)，其中执行价 = 公布价 × 当日折扣。
-        <span class="footer__links">
-          <a href="https://link3.cc/lunan" target="_blank" rel="noreferrer">作者信息</a>
-          ·
-          <a href="https://kyfw.12306.cn/otn/gonggao/student.html" target="_blank" rel="noreferrer">计算方法</a>
-        </span>
-      </p>
-    </footer>
-  </div>
-
-  <script src="./script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f5f7" />
+    <meta
+      name="description"
+      content="手动计算普速与动车组学生优惠票，支持多程汇总、票价明细和本地草稿。"
+    />
+    <title>学生票优惠计算器｜每一程，都算得明白</title>
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
