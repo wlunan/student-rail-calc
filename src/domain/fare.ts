@@ -14,6 +14,8 @@ export const calculateLeg = (leg: Leg): LegCalculation => {
     errors.adultPrice = '请输入大于 0、最多两位小数的金额';
   }
 
+  let publishedCents: number | null = null;
+  let publishedPriceEstimated = false;
   let studentCents: number | null = null;
   let formula = '';
   let note = '';
@@ -44,28 +46,47 @@ export const calculateLeg = (leg: Leg): LegCalculation => {
     }
   } else if (adultCents !== null) {
     const seventyFive = percentageOf(adultCents, 75);
+    let derivation = '';
 
-    if (!leg.publishedPrice.trim()) {
-      studentCents = seventyFive;
-      formula = `${formatMoney(adultCents)} × 75% = ${formatMoney(studentCents)}`;
-      note = '未填写公布价，暂估结果尚未校验公布价 40% 下限';
-    } else {
-      const publishedCents = parseMoneyToCents(leg.publishedPrice);
-      if (publishedCents === null) {
-        errors.publishedPrice = '请输入有效的公布票价';
-      } else if (publishedCents < adultCents) {
-        errors.publishedPrice = '公布价通常不应低于执行价，请核对';
+    if (leg.publishedPriceMode === 'discount' && leg.discount.trim()) {
+      const discount = Number(leg.discount.trim());
+      if (!Number.isFinite(discount) || discount <= 0 || discount > 10) {
+        errors.discount = '请输入 0–10 之间的页面折扣，例如 7.9';
       } else {
-        const fortyPublished = percentageOf(publishedCents, 40);
-        if (adultCents * 100 < publishedCents * 40) {
-          studentCents = adultCents;
-          formula = `执行价 ${formatMoney(adultCents)} 低于公布价 40%（${formatMoney(fortyPublished)}），按执行价计算`;
-          note = '低折扣车票：学生优惠票按全价执行票价计算';
-        } else {
-          studentCents = Math.max(seventyFive, fortyPublished);
-          formula = `max(执行价 × 75% = ${formatMoney(seventyFive)}，公布价 × 40% = ${formatMoney(fortyPublished)}) = ${formatMoney(studentCents)}`;
-          note = '已按执行价 75% 与公布价 40% 的完整规则计算';
-        }
+        publishedCents = Math.round((adultCents * 10) / discount);
+        publishedPriceEstimated = true;
+        const rate = Number((discount / 10).toFixed(4));
+        derivation = `公布价 ≈ ${formatMoney(adultCents)} ÷ ${rate} = ${formatMoney(publishedCents)}；`;
+      }
+    } else if (leg.publishedPriceMode === 'manual' && leg.publishedPrice.trim()) {
+      const manualPublishedCents = parseMoneyToCents(leg.publishedPrice);
+      if (manualPublishedCents === null) {
+        errors.publishedPrice = '请输入有效的公布票价';
+      } else if (manualPublishedCents < adultCents) {
+        errors.publishedPrice = '公布价通常不应低于实际成人票价，请核对';
+      } else {
+        publishedCents = manualPublishedCents;
+      }
+    }
+
+    if (publishedCents === null) {
+      if (!errors.discount && !errors.publishedPrice) {
+        studentCents = seventyFive;
+        formula = `${formatMoney(adultCents)} × 75% = ${formatMoney(studentCents)}`;
+        note = '未填写页面折扣或公布价，暂估结果尚未校验公布价 40% 下限';
+      }
+    } else {
+      const fortyPublished = percentageOf(publishedCents, 40);
+      const estimateNote = publishedPriceEstimated ? '公布价由页面折扣反推，可能受票价舍入影响；' : '';
+
+      if (adultCents * 100 < publishedCents * 40) {
+        studentCents = adultCents;
+        formula = `${derivation}实际票价 ${formatMoney(adultCents)} 低于公布价 40%（${formatMoney(fortyPublished)}），按实际票价计算`;
+        note = `${estimateNote}低折扣车票：学生优惠票按全价执行票价计算`;
+      } else {
+        studentCents = Math.max(seventyFive, fortyPublished);
+        formula = `${derivation}max(实际票价 × 75% = ${formatMoney(seventyFive)}，公布价 × 40% = ${formatMoney(fortyPublished)}) = ${formatMoney(studentCents)}`;
+        note = `${estimateNote}已按执行价 75% 与公布价 40% 的完整规则计算`;
       }
     }
   }
@@ -75,7 +96,7 @@ export const calculateLeg = (leg: Leg): LegCalculation => {
     ? 'invalid'
     : studentCents === null
       ? 'incomplete'
-      : seat.group === 'high-speed' && !leg.publishedPrice.trim()
+      : seat.group === 'high-speed' && publishedCents === null
         ? 'estimated'
         : 'complete';
 
@@ -84,6 +105,8 @@ export const calculateLeg = (leg: Leg): LegCalculation => {
     status,
     seat,
     adultCents,
+    publishedCents,
+    publishedPriceEstimated,
     studentCents,
     savedCents: adultCents !== null && studentCents !== null ? adultCents - studentCents : null,
     errors,

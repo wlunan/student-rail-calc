@@ -20,11 +20,15 @@ export const buildShareText = (legs: Leg[]): string => {
     const train = leg.trainNo.trim().toUpperCase();
     const date = leg.travelDate || '未填日期';
     const suffix = result.status === 'estimated' ? '（75% 暂估）' : '';
+    const publishedLine = result.publishedCents !== null
+      ? `公布票价：${result.publishedPriceEstimated ? `约 ${formatMoney(result.publishedCents)}（按 ${leg.discount} 折反推）` : formatMoney(result.publishedCents)}`
+      : '';
 
     lines.push(
       `第 ${index + 1} 程｜${route}`,
       `${train || '未填车次'} · ${date} · ${result.seat.shortLabel}`,
       `成人价：${formatMoney(result.adultCents ?? 0)}`,
+      ...(publishedLine ? [publishedLine] : []),
       `学生价：${formatMoney(result.studentCents ?? 0)}${suffix}`,
       `本程节省：${formatMoney(result.savedCents ?? 0)}`,
       `计算：${result.formula}`,

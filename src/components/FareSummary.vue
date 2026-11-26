@@ -71,7 +71,7 @@ defineExpose({ totals, allComplete, validItems, hasEstimated });
         还有 {{ legs.length - validItems.length }} 程待完善，当前合计仅包含已计价的行程。
       </div>
       <div v-else-if="hasEstimated" class="summary-warning summary-warning--estimate" role="status">
-        含未填写公布价的暂估行程，补充后可校验 40% 下限。
+        含未填写页面折扣或公布价的暂估行程，补充后可校验 40% 下限。
       </div>
 
       <div class="summary-itinerary">

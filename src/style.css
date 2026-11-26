@@ -839,6 +839,88 @@ main,
   color: var(--red);
 }
 
+.field-label-action {
+  display: flex;
+  min-height: 15px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.field .field-label-action label {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.field-mode-button {
+  position: relative;
+  flex: none;
+  min-height: 15px;
+  padding: 0 0 0 6px;
+  color: var(--rail-blue);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 15px;
+}
+
+.field-mode-button::after {
+  position: absolute;
+  inset: -6px -4px;
+  content: "";
+}
+
+.field-mode-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.discount-input {
+  position: relative;
+}
+
+.discount-input input {
+  padding-right: 34px;
+  font-family: var(--font-number);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.discount-input > span {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.discount-input.has-error input {
+  border-color: var(--red);
+  background: #fffafa;
+}
+
+.derived-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+  padding: 7px 9px;
+  color: var(--rail-blue);
+  background: var(--rail-blue-pale);
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.derived-price strong {
+  flex: none;
+  font-family: var(--font-number);
+  font-size: 13px;
+}
+
 .money-input {
   position: relative;
 }

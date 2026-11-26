@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { getSeat, SEAT_OPTIONS } from '../domain/seats';
 import { formatMoney } from '../domain/money';
-import type { Leg, LegCalculation, MoneyField } from '../types';
+import type { FareField, Leg, LegCalculation, MoneyField, PublishedPriceMode } from '../types';
 
 const props = defineProps<{
   leg: Leg;
@@ -18,14 +18,15 @@ const emit = defineEmits<{
 }>();
 
 const detailsOpen = ref(Boolean(props.leg.trainNo || props.leg.origin || props.leg.destination || props.leg.travelDate));
-const touched = reactive<Record<MoneyField, boolean>>({
+const touched = reactive<Record<FareField, boolean>>({
   adultPrice: false,
+  discount: false,
   publishedPrice: false,
   hardSeatPrice: false,
 });
 
 const seat = computed(() => getSeat(props.leg.seatId));
-const adultLabel = computed(() => (seat.value.group === 'high-speed' ? '成人执行价' : '成人公布价'));
+const adultLabel = computed(() => (seat.value.group === 'high-speed' ? '实际成人票价（折后）' : '成人公布票价'));
 const statusLabel = computed(() => ({
   complete: '已计算',
   estimated: '暂估',
@@ -38,7 +39,11 @@ const updateField = (field: keyof Leg, event: Event) => {
   emit('update', { ...props.leg, [field]: value });
 };
 
-const fieldError = (field: MoneyField): string => {
+const setPublishedPriceMode = (publishedPriceMode: PublishedPriceMode) => {
+  emit('update', { ...props.leg, publishedPriceMode });
+};
+
+const fieldError = (field: FareField): string => {
   if (props.result.errors[field]) return props.result.errors[field] ?? '';
   if (touched[field] && props.result.missingFields.includes(field)) {
     return field === 'hardSeatPrice' ? '硬卧需要填写同程硬座价' : '请填写此项票价';
@@ -135,19 +140,57 @@ const moneyInput = (field: MoneyField): Record<string, unknown> => ({
             <input v-bind="moneyInput('adultPrice')" />
           </div>
           <p :id="`${leg.id}-adultPrice-message`" class="field-message" :class="{ 'is-error': fieldError('adultPrice') }">
-            {{ fieldError('adultPrice') || (seat.group === 'high-speed' ? '12306 当前实际全价执行票价' : '该席别的成人公布票价') }}
+            {{ fieldError('adultPrice') || (seat.group === 'high-speed' ? '12306 显示的折后全价，不是学生票价格' : '该席别的成人公布票价') }}
           </p>
         </div>
 
         <div v-if="seat.group === 'high-speed'" class="field field--money">
-          <label :for="`${leg.id}-publishedPrice`">成人公布价 <span>选填</span></label>
-          <div class="money-input" :class="{ 'has-error': fieldError('publishedPrice') }">
+          <div class="field-label-action">
+            <label :for="leg.publishedPriceMode === 'discount' ? `${leg.id}-discount` : `${leg.id}-publishedPrice`">
+              {{ leg.publishedPriceMode === 'discount' ? '页面显示折扣' : '公布票价（未打折）' }} <span>选填</span>
+            </label>
+            <button
+              type="button"
+              class="field-mode-button"
+              @click="setPublishedPriceMode(leg.publishedPriceMode === 'discount' ? 'manual' : 'discount')"
+            >{{ leg.publishedPriceMode === 'discount' ? '直接填公布价' : '按页面折扣计算' }}</button>
+          </div>
+
+          <div v-if="leg.publishedPriceMode === 'discount'" class="discount-input" :class="{ 'has-error': fieldError('discount') }">
+            <input
+              :id="`${leg.id}-discount`"
+              :value="leg.discount"
+              inputmode="decimal"
+              autocomplete="off"
+              placeholder="例如 7.9"
+              :aria-invalid="Boolean(fieldError('discount'))"
+              :aria-describedby="`${leg.id}-discount-message`"
+              @input="updateField('discount', $event)"
+              @blur="touched.discount = true"
+            />
+            <span aria-hidden="true">折</span>
+          </div>
+          <div v-else class="money-input" :class="{ 'has-error': fieldError('publishedPrice') }">
             <span aria-hidden="true">¥</span>
             <input v-bind="moneyInput('publishedPrice')" />
           </div>
-          <p :id="`${leg.id}-publishedPrice-message`" class="field-message" :class="{ 'is-error': fieldError('publishedPrice') }">
-            {{ fieldError('publishedPrice') || '填写后可校验 40% 最低票价规则' }}
+
+          <p
+            :id="leg.publishedPriceMode === 'discount' ? `${leg.id}-discount-message` : `${leg.id}-publishedPrice-message`"
+            class="field-message"
+            :class="{ 'is-error': leg.publishedPriceMode === 'discount' ? fieldError('discount') : fieldError('publishedPrice') }"
+          >
+            <template v-if="leg.publishedPriceMode === 'discount'">
+              {{ fieldError('discount') || '7.9 折填 7.9；不知道折扣可留空，按 75% 暂估' }}
+            </template>
+            <template v-else>
+              {{ fieldError('publishedPrice') || '已知未打折原价时，可直接填写以精确计算' }}
+            </template>
           </p>
+          <div v-if="result.publishedPriceEstimated && result.publishedCents !== null" class="derived-price" aria-live="polite">
+            <span>已自动反推公布票价</span>
+            <strong>约 {{ formatMoney(result.publishedCents) }}</strong>
+          </div>
         </div>
 
         <div v-if="seat.id === 'regular-sleeper'" class="field field--money">

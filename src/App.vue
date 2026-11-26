@@ -209,20 +209,20 @@ const scrollToSummary = () => {
       <section class="field-guide" aria-labelledby="guide-title">
         <div class="field-guide__intro">
           <p class="section-kicker">BEFORE YOU CALCULATE</p>
-          <h2 id="guide-title">两个价格，别填反了</h2>
-          <p>动车折扣票能不能算准，关键在于分清“执行价”和“公布价”。</p>
+          <h2 id="guide-title">照着购票页面填，就行</h2>
+          <p>实际成人票价和页面折扣都会直接显示，不需要你先计算公布票价。</p>
         </div>
         <article class="guide-card guide-card--blue">
           <span class="guide-card__number">A</span>
-          <h3>执行价</h3>
-          <p>你当天购买成人票时，12306 实际展示的全价金额，可能已经包含折扣。</p>
+          <h3>实际成人票价</h3>
+          <p>填写 12306 当前显示的折后全价，注意不要填写已经优惠过的学生票价格。</p>
           <div><span>例如</span><strong>¥ 553.00</strong></div>
         </article>
         <article class="guide-card guide-card--sand">
           <span class="guide-card__number">B</span>
-          <h3>公布价</h3>
-          <p>该车次同区间、同席别的公布票价。填写后才能校验学生票 40% 下限。</p>
-          <div><span>例如</span><strong>¥ 700.00</strong></div>
+          <h3>页面显示折扣</h3>
+          <p>看到 7.9 折就填 7.9。系统会自动反推公布票价约 700 元，并校验 40% 下限。</p>
+          <div><span>例如</span><strong>7.9 折</strong></div>
         </article>
         <button type="button" class="guide-link" @click="rulesOpen = true">
           查看完整规则与购票提醒

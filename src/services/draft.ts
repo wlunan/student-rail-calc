@@ -2,12 +2,13 @@ import { createEmptyLeg, getSeat } from '../domain/seats';
 import type { Leg } from '../types';
 
 const STORAGE_KEY = 'student-rail-calc:draft:v2';
-const textFields: Array<keyof Omit<Leg, 'id' | 'seatId'>> = [
+const textFields: Array<keyof Omit<Leg, 'id' | 'seatId' | 'publishedPriceMode'>> = [
   'trainNo',
   'origin',
   'destination',
   'travelDate',
   'adultPrice',
+  'discount',
   'publishedPrice',
   'hardSeatPrice',
 ];
@@ -24,6 +25,7 @@ export const hasLegContent = (leg: Leg): boolean =>
       leg.destination.trim() ||
       leg.travelDate ||
       leg.adultPrice.trim() ||
+      leg.discount.trim() ||
       leg.publishedPrice.trim() ||
       leg.hardSeatPrice.trim(),
   );
@@ -46,6 +48,12 @@ export const loadDraft = (): Draft => {
         ...empty,
         id: typeof value.id === 'string' ? value.id : empty.id,
         seatId: typeof value.seatId === 'string' ? getSeat(value.seatId).id : empty.seatId,
+        publishedPriceMode:
+          value.publishedPriceMode === 'discount' || value.publishedPriceMode === 'manual'
+            ? value.publishedPriceMode
+            : typeof value.publishedPrice === 'string' && value.publishedPrice.trim()
+              ? 'manual'
+              : 'discount',
       };
 
       for (const field of textFields) {

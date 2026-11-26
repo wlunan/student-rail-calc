@@ -59,8 +59,8 @@ const close = () => emit('update:open', false);
         </section>
 
         <aside class="rule-notice">
-          <strong>为什么建议填写公布价？</strong>
-          <p>只填执行价时，本工具只能按 75% 暂估，无法检查“公布价 40%”下限。补充公布价后才会使用完整公式。</p>
+          <strong>有折后价和折扣，不需要自己算公布价</strong>
+          <p>例如实际成人票价 553 元、页面显示 7.9 折，本工具会自动反推公布价约 553 ÷ 0.79 = 700 元，再校验“公布价 40%”下限。若折扣未知可留空，但结果只按 75% 暂估。直接填写模式仍适用于已知准确公布价的情况。</p>
         </aside>
 
         <section class="qualification-notes">
